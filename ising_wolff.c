@@ -5,7 +5,7 @@
 
 #define L 32 // square lattice size
 #define T 2.27 // temperature (J/Kb)
-#define n 10000 // steps
+#define N 10000 // steps
 
 int S[L][L];
 
@@ -23,12 +23,20 @@ void pbc(int i) {
 
 int main() {
 
+    double p = 1-exp(-2/T);
+
+    for (int it = 0; it < N; it++) {
+
+    }
+    
+
+
     srand(time(NULL));
 
     initial_state();
 
-    double M[n];
-    double E[n];
+    double M[N];
+    double E[N];
 
     return 0;
 }
