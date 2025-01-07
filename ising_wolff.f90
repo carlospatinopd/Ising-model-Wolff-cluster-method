@@ -12,9 +12,10 @@ program ising_wolff
     !------------------------------------------------------------------------!
     !                               variables                                !
     !------------------------------------------------------------------------!
-    integer :: it, i, j, ip, im, jp, jm
+    integer :: it, i, j, ip, im, jp, jm, Si, n_add
     real(8) :: r
     integer, dimension(nx,nx) :: S
+    integer, dimension(2,4) :: cluster_add
 
     !------------------------------------------------------------------------!
     !                        Monte Carlo Wolff Method                        !
@@ -24,6 +25,7 @@ program ising_wolff
 
     do it = 1,N
         call random_spin(i,j) ! randomly choose a spin
+        Si = S(i,j) ! value of the choosen spin
         call pbc(ip,im,jp,jm) ! neighbors with periodic boundary conditions
 
     end do
@@ -59,27 +61,35 @@ program ising_wolff
     subroutine pbc(ip,im,jp,jm)
         integer, intent(out) :: ip, im, jp, jm
 
-        if (i == nx) then
-            ip = 1
-        else
-            ip = i+1
+        if (i == nx) then; ip = 1; else; ip = i+1; end if
+        if (i == 1) then; im = nx; else; im = i-1; end if
+        if (j == ny) then; jp = 1; else; jp = j+1; end if
+        if (j == 1) then; jm = ny; else;  jm = j-1; end if
+        
+        cluster_add(1,n_add) = i
+        cluster_add(2,n_add) = j
+
+        n_add = 0
+        if (S(ip,j) == Si) then
+            n_add = n_add+1
+            cluster_add(1,n_add) = ip
+            cluster_add(2,n_add) = j
         end if
-        if (i == 1) then
-            im = nx
-        else
-            im = i-1
+        if (S(im,j) == Si) then
+            n_add = n_add+1
+            cluster_add(1,n_add) = im
+            cluster_add(2,n_add) = j
         end if
-        if (j == ny) then
-            jp = 1
-        else
-            jp = j+1
+        if (S(i,jp) == Si) then
+            n_add = n_add+1
+            cluster_add(1,n_add) = i
+            cluster_add(2,n_add) = jp
         end if
-        if (j == 1) then
-            jm = ny
-        else
-            jm = j-1
+        if (S(i,jm) == Si) then
+            n_add = n_add+1
+            cluster_add(1,n_add) = i
+            cluster_add(2,n_add) = jm
         end if
     end subroutine pbc
-
 
 end program ising_wolff
