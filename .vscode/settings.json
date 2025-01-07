@@ -1,3 +1,4 @@
 {
-    "fortran.fortls.path": "fortls"
+    "fortran.fortls.path": "fortls",
+    "fortran.fortls.disabled": true
 }
