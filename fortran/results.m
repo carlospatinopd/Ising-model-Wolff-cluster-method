@@ -23,7 +23,7 @@ end
 figure(1)
 for i = 1:f:N
     imagesc(Si(:,:,i))
-    title(sprintf('Spin Configuration at Snapshot %d',i))
+    title(sprintf('Spin Configuration at step %d',i))
     xlabel('x')
     ylabel('y')
     pause(0.01)
@@ -34,11 +34,9 @@ plot(1:f:N, M, 'LineWidth', 1.5)
 title('Magnetization vs Monte Carlo Steps');
 xlabel('Monte Carlo Steps');
 ylabel('Magnetization');
-legend('M', 'Location', 'best');
 
 figure(3)
 plot(1:f:N, E, 'LineWidth', 1.5);
 title('Energy vs Monte Carlo Steps');
 xlabel('Monte Carlo Steps');
 ylabel('Energy');
-legend('E', 'Location', 'best');

@@ -5,9 +5,9 @@ program ising_wolff
     !                               parameters                               !
     !------------------------------------------------------------------------!
 
-    integer, parameter :: N = 1e3                 ! Monte Carlo steps
-    integer, parameter :: L = 32,nx = L, ny = L   ! square lattice size
-    real(8), parameter :: T = 0.5d0              ! temperature
+    integer, parameter :: N = 1e1                 ! Monte Carlo steps
+    integer, parameter :: L = 10,nx = L, ny = L   ! square lattice size
+    real(8), parameter :: T = 0.1d0              ! temperature
     real(8), parameter :: p = 1.0d0-exp(-2.0d0/T) ! bonds probability
     integer, parameter :: f = 1e0                 ! saving data frecuency
     
@@ -19,7 +19,7 @@ program ising_wolff
     real(8) :: r
     integer, dimension(nx,nx) :: S ! array of spins
     logical, dimension(nx,ny) :: C ! array of clustered spins
-    integer, dimension(2,4) :: s_add
+    integer, dimension(2,nx*ny) :: s_add
 
     !------------------------------------------------------------------------!
     !                        Monte Carlo Wolff Method                        !
