@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Parameters
-L = 50  # Size of the lattice (from the Fortran code)
+L = 32  # Size of the lattice (from the Fortran code)
 
 # Load data from the file
 initial_state = np.loadtxt("initial_state.txt")

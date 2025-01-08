@@ -4,15 +4,18 @@ program ising_wolff
     !------------------------------------------------------------------------!
     !                               parameters                               !
     !------------------------------------------------------------------------!
-    integer, parameter :: N = 1e5                ! Monte Carlo steps
-    integer, parameter :: L = 50,nx = L, ny = L   ! square lattice size
-    real(8), parameter :: T = 2.2d0               ! temperature
+
+    integer, parameter :: N = 1e3                 ! Monte Carlo steps
+    integer, parameter :: L = 32,nx = L, ny = L   ! square lattice size
+    real(8), parameter :: T = 0.5d0              ! temperature
     real(8), parameter :: p = 1.0d0-exp(-2.0d0/T) ! bonds probability
+    integer, parameter :: f = 1e0                 ! saving data frecuency
     
     !------------------------------------------------------------------------!
     !                               variables                                !
     !------------------------------------------------------------------------!
-    integer :: it, i, j, Si, n_add, ic
+
+    integer :: it, i, j, Si, n_add, ic, E, M, ip, jp
     real(8) :: r
     integer, dimension(nx,nx) :: S ! array of spins
     logical, dimension(nx,ny) :: C ! array of clustered spins
@@ -24,32 +27,51 @@ program ising_wolff
 
     call initial_state(S) ! asign random values to the spins (1 or -1)
 
+    open (unit = 100, file = "state_evolution.txt", status = "replace")
+    open (unit = 101, file = "magnetization.txt", status = "replace")
+    open (unit = 102, file = "energy.txt", status = "replace")
+    E = 0
+    M = 0
     do it = 1,N
         C = .FALSE.
         call random_spin(i,j) ! randomly choose a spin
         C(i,j) = .TRUE.
         Si = S(i,j) ! value of the choosen spin
-        call cluster_formation(i,j,n_add,s_add,C)
-        do while (n_add > 0)
+        call cluster_formation(i,j,n_add,s_add,C) ! form the initial cluster
+        do while (n_add > 0) ! form the cluster for the neighbors
             do ic = 1,n_add
                 Si=S(s_add(1,ic),s_add(2,ic))
                 call cluster_formation(s_add(1,ic),s_add(2,ic),n_add,s_add,C)
             end do
         end do
+
+        ! cluster flip
         do i = 1,nx
             do j = 1,ny
                 if (C(i,j)) S(i,j) = -S(i,j)
             end do 
         end do 
-    end do
 
-    open (unit = 100, file = "final_state.txt", status = "replace")
-        do i = 1,L
-            do j = 1,L
-                write(100,*) S(i,j)
+        ! save the data
+        if (mod(it,f) == 0) then
+            M = 0
+            E = 0
+            do i = 1,nx
+                ip = mod(i,nx)+1
+                do j = 1,ny
+                    jp = mod(j,ny)+1
+                    M = M+S(i,j)
+                    E = E-(S(i,j)*(S(ip,j)+S(i,jp)))
+                    write(100,*) S(i,j)
+                end do 
             end do
-        end do
+            write(101,*) M
+            write(102,*) E/2
+        end if
+    end do
     close(100)
+    close(101)
+    close(102)
 
     !------------------------------------------------------------------------!
     !                        functions and subroutines                       !
@@ -60,24 +82,31 @@ program ising_wolff
     ! random initial state
     subroutine initial_state(S)
         integer, intent(out) :: S(nx,ny)
-        open (unit = 100, file = "initial_state.txt", status = "replace")
+
+        open (unit = 100, file = "parameters.txt", status = "replace")
+        open (unit = 101, file = "initial_state.txt", status = "replace")
+            write(100,*) L, N, f
             do i = 1,L
                 do j = 1,L
                     call random_number(r)
                     S(i,j) = 2*int(r+0.5d0)-1
-                    write(100,*) S(i,j)
+                    write(101,*) S(i,j)
                 end do
             end do
         close(100)
+        close(101)
+
     end subroutine initial_state
 
     ! random initial state
     subroutine random_spin(i,j)
         integer, intent(out) :: i, j
+
         call random_number(r)
         i = 1+int(r*nx)
         call random_number(r)
         j = 1+int(r*ny)
+
     end subroutine random_spin
 
     ! neighbors with periodic boudary conditions for cluster formation
@@ -121,6 +150,7 @@ program ising_wolff
             s_add(2,n_add) = jm
             C(i,jm) = .TRUE.
         end if
+
     end subroutine cluster_formation
 
 end program ising_wolff
