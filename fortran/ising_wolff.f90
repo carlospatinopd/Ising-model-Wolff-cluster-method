@@ -37,12 +37,21 @@ program ising_wolff
         call random_spin(i,j) ! randomly choose a spin
         C(i,j) = .TRUE.
         Si = S(i,j) ! value of the choosen spin
+<<<<<<< Updated upstream
         call cluster_formation(i,j,n_add,s_add,C) ! form the initial cluster
         do while (n_add > 0) ! form the cluster for the neighbors
             do ic = 1,n_add
                 Si=S(s_add(1,ic),s_add(2,ic))
                 call cluster_formation(s_add(1,ic),s_add(2,ic),n_add,s_add,C)
             end do
+=======
+        n_add = 1
+        s_add(1,1) = i
+        s_add(2,1) = j
+        
+        do ic = 1,n_add
+            call cluster_formation(Si,s_add(1,ic),s_add(2,ic),n_add,s_add,C)
+>>>>>>> Stashed changes
         end do
 
         ! cluster flip
@@ -121,7 +130,10 @@ program ising_wolff
         jp = mod(j,ny)+1
         jm = mod(j-2,ny)+1
 
+<<<<<<< Updated upstream
         n_add = 0
+=======
+>>>>>>> Stashed changes
         call random_number(r)
         if (S(ip,j) == Si .AND. r < p .AND. .NOT. C(ip,j)) then
             n_add = n_add+1
