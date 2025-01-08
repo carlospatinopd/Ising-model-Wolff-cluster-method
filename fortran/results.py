@@ -38,21 +38,21 @@ for it in range(num_snapshots):
     plt.title(f'Spin Configuration at step {it * f}')
     plt.xlabel('x')
     plt.ylabel('y')
-    plt.pause(1)
+    plt.pause(0.001)
     plt.clf()
 
 # ------------------------------------------------------------------------- #
 #                 Plot Magnetization vs Monte Carlo Steps                   #
 # ------------------------------------------------------------------------- #
 
-plt.figure(2)
+# plt.figure(2)
 steps = np.arange(1, N + 1, f)
-plt.plot(steps, magnetization, linewidth=1.5)
-plt.title('Magnetization vs Monte Carlo Steps')
-plt.xlabel('Monte Carlo Steps')
-plt.ylabel('Magnetization')
-plt.grid(True)
-plt.show()
+# plt.plot(steps, magnetization, linewidth=1.5)
+# plt.title('Magnetization vs Monte Carlo Steps')
+# plt.xlabel('Monte Carlo Steps')
+# plt.ylabel('Magnetization')
+# plt.grid(True)
+# plt.show()
 
 # ------------------------------------------------------------------------- #
 #                      Plot Energy vs Monte Carlo Steps                     #
