@@ -4,9 +4,9 @@ program ising_wolff
     !------------------------------------------------------------------------!
     !                               parameters                               !
     !------------------------------------------------------------------------!
-    integer, parameter :: N = 1e6                ! Monte Carlo steps
+    integer, parameter :: N = 1e5                ! Monte Carlo steps
     integer, parameter :: L = 50,nx = L, ny = L   ! square lattice size
-    real(8), parameter :: T = 0.5d0               ! temperature
+    real(8), parameter :: T = 2.2d0               ! temperature
     real(8), parameter :: p = 1.0d0-exp(-2.0d0/T) ! bonds probability
     
     !------------------------------------------------------------------------!
@@ -14,8 +14,8 @@ program ising_wolff
     !------------------------------------------------------------------------!
     integer :: it, i, j, Si, n_add, ic
     real(8) :: r
-    integer, dimension(nx,nx) :: S
-    logical, dimension(nx,ny) :: C 
+    integer, dimension(nx,nx) :: S ! array of spins
+    logical, dimension(nx,ny) :: C ! array of clustered spins
     integer, dimension(2,4) :: s_add
 
     !------------------------------------------------------------------------!
@@ -94,28 +94,28 @@ program ising_wolff
 
         n_add = 0
         call random_number(r)
-        if (S(ip,j) == Si .AND. r < p .AND. C(i,j)) then
+        if (S(ip,j) == Si .AND. r < p .AND. .NOT. C(ip,j)) then
             n_add = n_add+1
             s_add(1,n_add) = ip
             s_add(2,n_add) = j
             C(ip,j) = .TRUE.
         end if
         call random_number(r)
-        if (S(im,j) == Si .AND. r < p .AND. C(i,j)) then
+        if (S(im,j) == Si .AND. r < p .AND. .NOT. C(im,j)) then
             n_add = n_add+1
             s_add(1,n_add) = im
             s_add(2,n_add) = j
             C(im,j) = .TRUE.
         end if
         call random_number(r)
-        if (S(i,jp) == Si .AND. r < p .AND. C(i,j)) then
+        if (S(i,jp) == Si .AND. r < p .AND. .NOT. C(i,jp)) then
             n_add = n_add+1
             s_add(1,n_add) = i
             s_add(2,n_add) = jp
             C(i,jp) = .TRUE.
         end if
         call random_number(r)
-        if (S(i,jm) == Si .AND. r < p .AND. C(i,j)) then
+        if (S(i,jm) == Si .AND. r < p .AND. .NOT. C(i,jm)) then
             n_add = n_add+1
             s_add(1,n_add) = i
             s_add(2,n_add) = jm
