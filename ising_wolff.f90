@@ -4,17 +4,18 @@ program ising_wolff
     !------------------------------------------------------------------------!
     !                               parameters                               !
     !------------------------------------------------------------------------!
-    integer, parameter :: N = 1e5               ! Monte Carlo steps
-    integer, parameter :: L = 50,nx = L, ny = L ! square lattice size
-    real(8), parameter :: T = 3                 ! temperature
-    real(8), parameter :: p = 1-exp(-2/T)       ! bonds probability
+    integer, parameter :: N = 1e6                ! Monte Carlo steps
+    integer, parameter :: L = 50,nx = L, ny = L   ! square lattice size
+    real(8), parameter :: T = 0.5d0               ! temperature
+    real(8), parameter :: p = 1.0d0-exp(-2.0d0/T) ! bonds probability
     
     !------------------------------------------------------------------------!
     !                               variables                                !
     !------------------------------------------------------------------------!
     integer :: it, i, j, Si, n_add, ic
     real(8) :: r
-    integer, dimension(nx,nx) :: S, cluster
+    integer, dimension(nx,nx) :: S
+    logical, dimension(nx,ny) :: C 
     integer, dimension(2,4) :: s_add
 
     !------------------------------------------------------------------------!
@@ -24,23 +25,31 @@ program ising_wolff
     call initial_state(S) ! asign random values to the spins (1 or -1)
 
     do it = 1,N
-        cluster = 1
+        C = .FALSE.
         call random_spin(i,j) ! randomly choose a spin
-        cluster(i,j) = -1
+        C(i,j) = .TRUE.
         Si = S(i,j) ! value of the choosen spin
-        call cluster_formation(i,j,n_add,s_add)
+        call cluster_formation(i,j,n_add,s_add,C)
         do while (n_add > 0)
             do ic = 1,n_add
-                call cluster_formation(s_add(1,ic),s_add(1,ic),n_add,s_add)
-                cluster(s_add(1,ic),s_add(2,ic)) = -1
+                Si=S(s_add(1,ic),s_add(2,ic))
+                call cluster_formation(s_add(1,ic),s_add(2,ic),n_add,s_add,C)
             end do
         end do
         do i = 1,nx
             do j = 1,ny
-                S(i,j) = S(i,j)*cluster(i,j)
+                if (C(i,j)) S(i,j) = -S(i,j)
             end do 
         end do 
     end do
+
+    open (unit = 100, file = "final_state.txt", status = "replace")
+        do i = 1,L
+            do j = 1,L
+                write(100,*) S(i,j)
+            end do
+        end do
+    close(100)
 
     !------------------------------------------------------------------------!
     !                        functions and subroutines                       !
@@ -51,13 +60,15 @@ program ising_wolff
     ! random initial state
     subroutine initial_state(S)
         integer, intent(out) :: S(nx,ny)
-
-        do i = 1,L
-            do j = 1,L
-                call random_number(r)
-                S(i,j) = 2*int(r+0.5d0)-1
+        open (unit = 100, file = "initial_state.txt", status = "replace")
+            do i = 1,L
+                do j = 1,L
+                    call random_number(r)
+                    S(i,j) = 2*int(r+0.5d0)-1
+                    write(100,*) S(i,j)
+                end do
             end do
-        end do
+        close(100)
     end subroutine initial_state
 
     ! random initial state
@@ -70,43 +81,46 @@ program ising_wolff
     end subroutine random_spin
 
     ! neighbors with periodic boudary conditions for cluster formation
-    subroutine cluster_formation(i,j,n_add,s_add)
+    subroutine cluster_formation(i,j,n_add,s_add,C)
         integer, intent(in) :: i, j
+        integer, intent(inout) :: s_add(2,4), n_add
+        logical, intent(inout) :: C(nx,ny)
         integer :: ip, im, jp, jm
-        integer, intent(out) :: s_add(2,4), n_add
 
-        if (i == nx) then; ip = 1; else; ip = i+1; end if
-        if (i == 1) then; im = nx; else; im = i-1; end if
-        if (j == ny) then; jp = 1; else; jp = j+1; end if
-        if (j == 1) then; jm = ny; else;  jm = j-1; end if
+        ip = mod(i,nx)+1
+        im = mod(i-2,nx)+1
+        jp = mod(j,ny)+1
+        jm = mod(j-2,ny)+1
 
         n_add = 0
         call random_number(r)
-        if (S(ip,j) == Si .AND. r >= p) then
+        if (S(ip,j) == Si .AND. r < p .AND. C(i,j)) then
             n_add = n_add+1
             s_add(1,n_add) = ip
             s_add(2,n_add) = j
+            C(ip,j) = .TRUE.
         end if
         call random_number(r)
-        if (S(im,j) == Si .AND. r >= p) then
+        if (S(im,j) == Si .AND. r < p .AND. C(i,j)) then
             n_add = n_add+1
             s_add(1,n_add) = im
             s_add(2,n_add) = j
+            C(im,j) = .TRUE.
         end if
         call random_number(r)
-        if (S(i,jp) == Si .AND. r >= p) then
+        if (S(i,jp) == Si .AND. r < p .AND. C(i,j)) then
             n_add = n_add+1
             s_add(1,n_add) = i
             s_add(2,n_add) = jp
+            C(i,jp) = .TRUE.
         end if
         call random_number(r)
-        if (S(i,jm) == Si .AND. r >= p) then
+        if (S(i,jm) == Si .AND. r < p .AND. C(i,j)) then
             n_add = n_add+1
             s_add(1,n_add) = i
             s_add(2,n_add) = jm
+            C(i,jm) = .TRUE.
         end if
-
-        Si = S(i,j)
     end subroutine cluster_formation
 
 end program ising_wolff
