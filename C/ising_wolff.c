@@ -8,13 +8,13 @@
 |                                Parameters                                   |
 \*---------------------------------------------------------------------------*/ 
 
-#define N 1000                                  // monte Carlo steps
+#define N 15000                                  // monte Carlo steps
 #define L 200                                   // square lattice size
 #define nx L
 #define ny L
-#define T 2.0                                   // temperature
+#define T 3.0                                   // temperature
 #define p (1.0-exp(-2.0/T))                     // cluster add probability
-#define f 1                                     // saving data frequency
+#define f 30                                     // saving data frequency
 
 /*---------------------------------------------------------------------------*\
 |                              Global variables                               |
@@ -182,5 +182,4 @@ void save_data(FILE *state_file, FILE *mag_file, FILE *energy_file, int it) {
 
     fprintf(mag_file, "%d\n", M);
     fprintf(energy_file, "%f\n", E / 2.0);
-    printf("%d\n",M);
 }

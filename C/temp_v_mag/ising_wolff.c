@@ -8,8 +8,8 @@
 |                                Parameters                                   |
 \*---------------------------------------------------------------------------*/ 
 
-#define N 1500                                   // monte Carlo steps
-#define L 200                                   // square lattice size
+#define N 1000                                   // monte Carlo steps
+#define L 250                                   // square lattice size
 #define nx L
 #define ny L
 #define Ti 0.01                                   // temperature

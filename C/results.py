@@ -47,22 +47,22 @@ ani.save('state_evolution.mp4', fps=10, dpi=200)
 plt.close(fig)  # Close the figure after saving the animation
 
 # ------------------------------------------------------------------------- #
-#                 Plot Magnetization vs Monte Carlo Steps                   #
-# ------------------------------------------------------------------------- #
-
-plt.figure(2)
-steps = np.arange(1, N + 1, f)
-plt.plot(steps, magnetization, linewidth=1.5)
-plt.xlabel('Monte Carlo Steps')
-plt.ylabel('Magnetization')
-plt.show()
-
-# ------------------------------------------------------------------------- #
 #                      Plot Energy vs Monte Carlo Steps                     #
 # ------------------------------------------------------------------------- #
 
-plt.figure(3)
+plt.figure(2, figsize=(8, 6))
+steps = np.arange(1, N + 1, f)
 plt.plot(steps, energy, linewidth=1.5)
 plt.xlabel('Monte Carlo Steps')
 plt.ylabel('Energy')
+plt.show()
+
+# ------------------------------------------------------------------------- #
+#                 Plot Magnetization vs Monte Carlo Steps                   #
+# ------------------------------------------------------------------------- #
+
+plt.figure(3, figsize=(8, 6))
+plt.plot(steps, magnetization, linewidth=1.5)
+plt.xlabel('Monte Carlo Steps')
+plt.ylabel('Magnetization')
 plt.show()

@@ -6,3 +6,5 @@ N = 200*200;
 
 figure(1)
 plot(abs(data(:,2)),abs(data(:,1)/N),LineWidth=1.5)
+xlabel('T (J/k_b)');
+ylabel('M/Ms');
