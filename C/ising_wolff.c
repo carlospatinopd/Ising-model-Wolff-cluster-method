@@ -4,156 +4,183 @@
 #include <stdbool.h>
 #include <time.h>
 
-#define N 100000  // Monte Carlo steps
-#define L 50      // Square lattice size
-#define T 2.2     // Temperature
-#define P (1.0 - exp(-2.0 / T))  // Bond probability
+/*---------------------------------------------------------------------------*\
+|                                Parameters                                   |
+\*---------------------------------------------------------------------------*/ 
 
-// Function declarations
-void initial_state(int **S);
+#define N 250                                   // monte Carlo steps
+#define L 50                                   // square lattice size
+#define nx L
+#define ny L
+#define T 0.9                                   // temperature
+#define p (1.0-exp(-2.0/T))                     // cluster add probability
+#define f 1                                     // saving data frequency
+
+/*---------------------------------------------------------------------------*\
+|                              Global variables                               |
+\*---------------------------------------------------------------------------*/
+
+int S[nx][ny];          // array of spins
+bool C[nx][ny];         // array of clustered spins
+int s_add[2][nx * ny];  // array to store cluster positions
+
+// functions
+void initial_state();
 void random_spin(int *i, int *j);
-void cluster_formation(int i, int j, int Si, int *n_add, int s_add[][2], bool **C, int **S);
-void save_to_file(int **S, const char *filename);
-int periodic_boundary(int index, int limit);
+void cluster_formation(int Si, int i, int j, int *n_add);
+void save_data(FILE *state_file, FILE *mag_file, FILE *energy_file, int it);
 
 int main() {
-    // Allocate 2D arrays
-    int **S = malloc(L * sizeof(int *));
-    bool **C = malloc(L * sizeof(bool *));
-    for (int i = 0; i < L; i++) {
-        S[i] = malloc(L * sizeof(int));
-        C[i] = malloc(L * sizeof(bool));
-    }
+    int i, j, it, Si, n_add, ic, E, M, ip, jp;
+    FILE *state_file, *mag_file, *energy_file;
 
-    int s_add[4][2];  // Neighbors for cluster formation
-    srand((unsigned int)time(NULL));  // Seed random number generator
+    srand(time(NULL));
 
-    initial_state(S);
-    save_to_file(S, "initial_state.txt");
+    // initial state
+    initial_state();
 
-    for (int it = 0; it < N; ++it) {
-        for (int i = 0; i < L; ++i)
-            for (int j = 0; j < L; ++j)
+    // open files
+    state_file = fopen("state_evolution.txt", "w");
+    mag_file = fopen("magnetization.txt", "w");
+    energy_file = fopen("energy.txt", "w");
+
+    E = 0;
+    M = 0;
+
+    for (it = 1; it <= N; it++) {
+
+        // reset cluster array
+        for (i = 0; i < nx; i++) {
+            for (j = 0; j < ny; j++) {
                 C[i][j] = false;
-
-        int i, j, Si;
-        random_spin(&i, &j);
-        C[i][j] = true;
-        Si = S[i][j];
-
-        int n_add = 0;
-        cluster_formation(i, j, Si, &n_add, s_add, C, S);
-
-        while (n_add > 0) {
-            int new_s_add[4][2];
-            int new_n_add = 0;
-
-            for (int ic = 0; ic < n_add; ++ic) {
-                int x = s_add[ic][0];
-                int y = s_add[ic][1];
-                cluster_formation(x, y, Si, &new_n_add, new_s_add, C, S);
             }
-
-            for (int k = 0; k < new_n_add; ++k) {
-                s_add[k][0] = new_s_add[k][0];
-                s_add[k][1] = new_s_add[k][1];
-            }
-            n_add = new_n_add;
         }
 
-        for (int x = 0; x < L; ++x) {
-            for (int y = 0; y < L; ++y) {
-                if (C[x][y]) {
-                    S[x][y] = -S[x][y];
+        // choose a random spin
+        random_spin(&i,&j);
+        C[i][j] = true;
+        Si = S[i][j];
+        n_add = 1;
+        s_add[0][0] = i;
+        s_add[1][0] = j;
+
+        // form cluster
+        for (ic = 0; ic < n_add; ic++) {
+            cluster_formation(Si, s_add[0][ic], s_add[1][ic], &n_add);
+        }
+
+        // flip the cluster
+        for (i = 0; i < nx; i++) {
+            for (j = 0; j < ny; j++) {
+                if (C[i][j]) {
+                    S[i][j] = -S[i][j];
                 }
             }
         }
+
+        // save data
+        if (it%f == 0) {
+            save_data(state_file,mag_file,energy_file,it);
+        }
     }
 
-    save_to_file(S, "final_state.txt");
-
-    // Free allocated memory
-    for (int i = 0; i < L; i++) {
-        free(S[i]);
-        free(C[i]);
-    }
-    free(S);
-    free(C);
-
+    // close files
+    fclose(state_file);
+    fclose(mag_file);
+    fclose(energy_file);
     return 0;
 }
 
-// Initialize spins randomly (-1 or 1)
-void initial_state(int **S) {
-    for (int i = 0; i < L; ++i) {
-        for (int j = 0; j < L; ++j) {
-            S[i][j] = (rand() / (double)RAND_MAX < 0.5) ? -1 : 1;
+/*---------------------------------------------------------------------------*\
+|                                  Functions                                  |
+\*---------------------------------------------------------------------------*/
+
+// initial state with random spins
+void initial_state() {
+    FILE *param_file, *init_state_file;
+    int i, j;
+
+    param_file = fopen("parameters.txt", "w");
+    init_state_file = fopen("initial_state.txt", "w");
+
+    fprintf(param_file, "%d %d %d\n", L, N, f);
+
+    for (i = 0; i < nx; i++) {
+        for (j = 0; j < ny; j++) {
+            S[i][j] = (rand()%2)*2-1; // Randomly assign -1 or 1
+            fprintf(init_state_file, "%d\n", S[i][j]);
         }
     }
+
+    fclose(param_file);
+    fclose(init_state_file);
 }
 
-// Choose a random spin
+// randomly choose a spin
 void random_spin(int *i, int *j) {
-    *i = rand() % L;
-    *j = rand() % L;
+    *i = rand()%nx;
+    *j = rand()%ny;
 }
 
-// Cluster formation with periodic boundary conditions
-void cluster_formation(int i, int j, int Si, int *n_add, int s_add[][2], bool **C, int **S) {
-    int ip = periodic_boundary(i + 1, L);
-    int im = periodic_boundary(i - 1, L);
-    int jp = periodic_boundary(j + 1, L);
-    int jm = periodic_boundary(j - 1, L);
+// form cluster with periodic boundary conditions
+void cluster_formation(int Si, int i, int j, int *n_add) {
+    int ip, im, jp, jm;
+    double r;
 
-    *n_add = 0;
+    ip = (i+1)%nx;
+    im = (i-1+nx)%nx;
+    jp = (j+1)%ny;
+    jm = (j-1+ny)%ny;
 
-    if (S[ip][j] == Si && (rand() / (double)RAND_MAX) < P && !C[ip][j]) {
-        s_add[*n_add][0] = ip;
-        s_add[*n_add][1] = j;
+    r = (double)rand()/RAND_MAX;
+    if (S[ip][j] == Si && r < p && !C[ip][j]) {
+        s_add[0][*n_add] = ip;
+        s_add[1][*n_add] = j;
         C[ip][j] = true;
         (*n_add)++;
     }
-    if (S[im][j] == Si && (rand() / (double)RAND_MAX) < P && !C[im][j]) {
-        s_add[*n_add][0] = im;
-        s_add[*n_add][1] = j;
+
+    r = (double)rand()/RAND_MAX;
+    if (S[im][j] == Si && r < p && !C[im][j]) {
+        s_add[0][*n_add] = im;
+        s_add[1][*n_add] = j;
         C[im][j] = true;
         (*n_add)++;
     }
-    if (S[i][jp] == Si && (rand() / (double)RAND_MAX) < P && !C[i][jp]) {
-        s_add[*n_add][0] = i;
-        s_add[*n_add][1] = jp;
+
+    r = (double)rand()/RAND_MAX;
+    if (S[i][jp] == Si && r < p && !C[i][jp]) {
+        s_add[0][*n_add] = i;
+        s_add[1][*n_add] = jp;
         C[i][jp] = true;
         (*n_add)++;
     }
-    if (S[i][jm] == Si && (rand() / (double)RAND_MAX) < P && !C[i][jm]) {
-        s_add[*n_add][0] = i;
-        s_add[*n_add][1] = jm;
+
+    r = (double)rand()/RAND_MAX;
+    if (S[i][jm] == Si && r < p && !C[i][jm]) {
+        s_add[0][*n_add] = i;
+        s_add[1][*n_add] = jm;
         C[i][jm] = true;
         (*n_add)++;
     }
 }
 
-// Save lattice state to file
-void save_to_file(int **S, const char *filename) {
-    FILE *file = fopen(filename, "w");
-    if (!file) {
-        perror("Error opening file");
-        exit(EXIT_FAILURE);
-    }
+// save state, magnetization, and energy data each f steps
+void save_data(FILE *state_file, FILE *mag_file, FILE *energy_file, int it) {
+    int i, j, ip, jp;
+    int M = 0, E = 0;
 
-    for (int i = 0; i < L; ++i) {
-        for (int j = 0; j < L; ++j) {
-            fprintf(file, "%d ", S[i][j]);
+    for (i = 0; i < nx; i++) {
+        ip = (i+1)%nx;
+        for (j = 0; j < ny; j++) {
+            jp = (j+1)%ny;
+            M += S[i][j];
+            E -= S[i][j]*(S[ip][j]+S[i][jp]);
+            fprintf(state_file, "%d\n", S[i][j]);
         }
-        fprintf(file, "\n");
     }
 
-    fclose(file);
-}
-
-// Apply periodic boundary conditions
-int periodic_boundary(int index, int limit) {
-    if (index < 0) return limit - 1;
-    if (index >= limit) return 0;
-    return index;
+    fprintf(mag_file, "%d\n", M);
+    fprintf(energy_file, "%f\n", E / 2.0);
+    printf("%d\n",M);
 }
