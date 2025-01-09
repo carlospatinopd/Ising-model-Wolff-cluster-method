@@ -8,11 +8,11 @@
 |                                Parameters                                   |
 \*---------------------------------------------------------------------------*/ 
 
-#define N 250                                   // monte Carlo steps
-#define L 50                                   // square lattice size
+#define N 1000                                  // monte Carlo steps
+#define L 200                                   // square lattice size
 #define nx L
 #define ny L
-#define T 0.9                                   // temperature
+#define T 2.0                                   // temperature
 #define p (1.0-exp(-2.0/T))                     // cluster add probability
 #define f 1                                     // saving data frequency
 
