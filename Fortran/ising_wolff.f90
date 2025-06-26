@@ -41,8 +41,10 @@ program ising_wolff
         s_add(1,1) = i
         s_add(2,1) = j
         
-        do ic = 1,n_add
-            call cluster_formation(Si,s_add(1,ic),s_add(2,ic),n_add,s_add,C)
+        ic = 1
+        do while (ic .LE. n_add)
+            call cluster_formation(s_add(1,ic),s_add(2,ic),n_add,s_add,C)
+            ic = ic+1
         end do
 
         ! cluster flip
@@ -80,8 +82,8 @@ program ising_wolff
     contains
 
     ! random initial state
-    subroutine initial_state(S)
-        integer, intent(out) :: S(nx,ny)
+    subroutine initial_state(S0)
+        integer, intent(out) :: S0(nx,ny)
 
         open (unit = 100, file = "parameters.txt", status = "replace")
         open (unit = 101, file = "initial_state.txt", status = "replace")
@@ -89,8 +91,8 @@ program ising_wolff
             do i = 1,L
                 do j = 1,L
                     call random_number(r)
-                    S(i,j) = 2*int(r+0.5d0)-1
-                    write(101,*) S(i,j)
+                    S0(i,j) = 2*int(r+0.5d0)-1
+                    write(101,*) S0(i,j)
                 end do
             end do
         close(100)
@@ -99,19 +101,19 @@ program ising_wolff
     end subroutine initial_state
 
     ! random initial state
-    subroutine random_spin(i,j)
-        integer, intent(out) :: i, j
+    subroutine random_spin(i0,j0)
+        integer, intent(out) :: i0, j0
 
         call random_number(r)
-        i = 1+int(r*nx)
+        i0 = 1+int(r*nx)
         call random_number(r)
-        j = 1+int(r*ny)
+        j0 = 1+int(r*ny)
 
     end subroutine random_spin
 
     ! neighbors with periodic boudary conditions for cluster formation
-    subroutine cluster_formation(Si,i,j,n_add,s_add,C)
-        integer, intent(in) :: Si, i, j
+    subroutine cluster_formation(i,j,n_add,s_add,C)
+        integer, intent(in) :: i, j
         integer, intent(inout) :: s_add(2,nx*ny), n_add
         logical, intent(inout) :: C(nx,ny)
         integer :: ip, im, jp, jm
